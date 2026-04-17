@@ -8,7 +8,7 @@ on:
         type: string
       run_id:
         required: true
-        type: string
+        type: number
       head_branch:
         required: true
         type: string
