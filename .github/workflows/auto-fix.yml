@@ -1,0 +1,47 @@
+name: Auto Fix
+
+on:
+  workflow_call:
+    inputs:
+      workflow_name:
+        required: true
+        type: string
+      run_id:
+        required: true
+        type: string
+      head_branch:
+        required: true
+        type: string
+    secrets:
+      ANTHROPIC_API_KEY:
+        required: true
+      GH_PAT:
+        required: true
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    permissions:
+      contents: write
+      pull-requests: write
+      actions: read
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: anthropics/claude-code-action@v1
+        with:
+          prompt: |
+            The "${{ inputs.workflow_name }}" workflow failed.
+            Run ID: ${{ inputs.run_id }}
+            Branch: ${{ inputs.head_branch }}
+
+            1. Run `gh run view ${{ inputs.run_id }} --log-failed` to get the failure logs
+            2. Diagnose the root cause
+            3. If the fix is in code or CI config, make the changes and create a PR targeting the failed branch
+            4. If the failure is environmental (network, Apple services, flaky test), just post a summary comment on the run
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          claude_args: "--model claude-opus-4-6"
