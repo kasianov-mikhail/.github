@@ -1,0 +1,15 @@
+name: Notify Scout
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger scout tests
+        run: |
+          gh workflow run swift.yml --repo kasianov-mikhail/scout
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
