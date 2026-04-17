@@ -1,5 +1,27 @@
 Shared [reusable workflows](https://docs.github.com/en/actions/sharing-automations/reusing-workflows) for kasianov-mikhail repositories.
 
+## Update flow
+
+```
+┌─────────┐       push        ┌─────────┐
+│ .github │ ──────────────▶   │  scout  │
+└─────────┘   Notify Scout    └─────────┘
+              (workflow_dispatch)   │
+                                   │ tests pass on main
+                                   │ (repository_dispatch)
+                                   ▼
+                              ┌─────────┐
+                              │scout-ip │
+                              └─────────┘
+                                   │
+                                   │ update Package.resolved
+                                   │ debounce 15 min
+                                   ▼
+                              ┌──────────┐
+                              │TestFlight│
+                              └──────────┘
+```
+
 ## 🔧 Auto Fix
 
 Runs Claude Code to diagnose a workflow failure and create a fix PR.
@@ -11,6 +33,12 @@ on:
   workflow_run:
     workflows: [CI]  # name of the workflow to monitor
     types: [completed]
+
+permissions:
+  contents: write
+  pull-requests: write
+  actions: read
+  id-token: write
 
 jobs:
   fix:
@@ -36,6 +64,12 @@ name: Resolve Conflicts
 on:
   push:
     branches: [main]
+
+permissions:
+  contents: write
+  pull-requests: write
+  actions: read
+  id-token: write
 
 jobs:
   find:
