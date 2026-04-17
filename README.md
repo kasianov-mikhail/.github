@@ -2,24 +2,11 @@ Shared [reusable workflows](https://docs.github.com/en/actions/sharing-automatio
 
 ## Update flow
 
-```
-┌─────────┐       push        ┌─────────┐
-│ .github │ ──────────────▶   │  scout  │
-└─────────┘   Notify Scout    └─────────┘
-              (workflow_dispatch)   │
-                                   │ tests pass on main
-                                   │ (repository_dispatch)
-                                   ▼
-                              ┌─────────┐
-                              │scout-ip │
-                              └─────────┘
-                                   │
-                                   │ update Package.resolved
-                                   │ debounce 15 min
-                                   ▼
-                              ┌──────────┐
-                              │TestFlight│
-                              └──────────┘
+```mermaid
+graph TD
+    A[.github] -->|workflow_dispatch| B[scout]
+    B -->|repository_dispatch| C[scout-ip]
+    C -->|debounce 15 min| D[TestFlight]
 ```
 
 ## 🔧 Auto Fix
