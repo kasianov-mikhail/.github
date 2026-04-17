@@ -2,6 +2,10 @@ name: Resolve Conflicts
 
 on:
   workflow_call:
+    inputs:
+      pr:
+        required: true
+        type: number
     secrets:
       ANTHROPIC_API_KEY:
         required: true
@@ -9,23 +13,7 @@ on:
         required: true
 
 jobs:
-  find:
-    runs-on: ubuntu-latest
-    outputs:
-      prs: ${{ steps.check.outputs.prs }}
-    steps:
-      - name: Find conflicted PRs
-        id: check
-        env:
-          GH_TOKEN: ${{ secrets.GH_PAT }}
-        run: |
-          sleep 30
-          PRS=$(gh pr list --repo ${{ github.repository }} --json number,mergeable --jq '[.[] | select(.mergeable == "CONFLICTING") | .number]')
-          echo "prs=$PRS" >> $GITHUB_OUTPUT
-
   resolve:
-    needs: find
-    if: needs.find.outputs.prs != '[]'
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
@@ -35,17 +23,13 @@ jobs:
       actions: read
       id-token: write
 
-    strategy:
-      matrix:
-        pr: ${{ fromJson(needs.find.outputs.prs) }}
-
     steps:
       - name: Get PR branch
         id: pr
         env:
           GH_TOKEN: ${{ secrets.GH_PAT }}
         run: |
-          BRANCH=$(gh pr view ${{ matrix.pr }} --repo ${{ github.repository }} --json headRefName --jq '.headRefName')
+          BRANCH=$(gh pr view ${{ inputs.pr }} --repo ${{ github.repository }} --json headRefName --jq '.headRefName')
           echo "branch=$BRANCH" >> $GITHUB_OUTPUT
 
       - uses: actions/checkout@v6
@@ -57,7 +41,7 @@ jobs:
       - uses: anthropics/claude-code-action@v1
         with:
           prompt: |
-            PR #${{ matrix.pr }} has merge conflicts with main.
+            PR #${{ inputs.pr }} has merge conflicts with main.
 
             1. Run `git merge origin/main` to see the conflicts
             2. Resolve all conflicts
